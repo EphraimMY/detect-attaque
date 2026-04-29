@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>DetAttaq - Détecteur de Bruteforce SSH</title>
+   <style>
+       * {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+       }
+       
+       body {
+           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           min-height: 100vh;
+           padding: 20px;
+       }
+       
+       .container {
+           max-width: 1200px;
+           margin: 0 auto;
+           background: white;
+           border-radius: 10px;
+           box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+           overflow: hidden;
+       }
+       
+       .header {
+           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           color: white;
+           padding: 30px;
+           text-align: center;
+       }
+       
+       .header h1 {
+           margin-bottom: 10px;
+           font-size: 2.5em;
+       }
+       
+       .header p {
+           opacity: 0.9;
+       }
+       
+       .content {
+           display: grid;
+           grid-template-columns: 1fr 2fr;
+           gap: 20px;
+           padding: 30px;
+       }
+       
+       .panel {
+           background: #f8f9fa;
+           border: 1px solid #dee2e6;
+           border-radius: 8px;
+           padding: 20px;
+       }
+       
+       .panel h2 {
+           color: #667eea;
+           margin-bottom: 15px;
+           font-size: 1.3em;
+           border-bottom: 2px solid #667eea;
+           padding-bottom: 10px;
+       }
+       
+       .status {
+           display: flex;
+           flex-direction: column;
+           gap: 15px;
+       }
+       
+       .status-item {
+           display: flex;
+           justify-content: space-between;
+           padding: 10px;
+           background: white;
+           border-radius: 5px;
+           border-left: 4px solid #667eea;
+       }
+       
+       .status-item.active {
+           border-left-color: #28a745;
+       }
+       
+       .status-item.inactive {
+           border-left-color: #dc3545;
+       }
+       
+       .status-label {
+           font-weight: 600;
+           color: #333;
+       }
+       
+       .status-value {
+           color: #666;
+       }
+       
+       .status-value.active {
+           color: #28a745;
+           font-weight: 600;
+       }
+       
+       .status-value.inactive {
+           color: #dc3545;
+           font-weight: 600;
+       }
+       
+       .controls {
+           display: flex;
+           gap: 10px;
+           margin-top: 20px;
+       }
+       
+       button {
+           flex: 1;
+           padding: 10px 20px;
+           border: none;
+           border-radius: 5px;
+           font-size: 1em;
+           cursor: pointer;
+           font-weight: 600;
+           transition: all 0.3s ease;
+       }
+       
+       .btn-start {
+           background: #28a745;
+           color: white;
+       }
+       
+       .btn-start:hover {
+           background: #218838;
+           transform: translateY(-2px);
+           box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+       }
+       
+       .btn-stop {
+           background: #dc3545;
+           color: white;
+       }
+       
+       .btn-stop:hover {
+           background: #c82333;
+           transform: translateY(-2px);
+           box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+       }
+       
+       .btn-clear {
+           background: #6c757d;
+           color: white;
+           padding: 8px 15px;
+           font-size: 0.9em;
+       }
+       
+       .btn-clear:hover {
+           background: #5a6268;
+       }
+       
+       .alerts-panel {
+           grid-column: 2;
+       }
+       
+       .alerts-container {
+           display: flex;
+           flex-direction: column-reverse;
+           gap: 10px;
+           max-height: 600px;
+           overflow-y: auto;
+       }
+       
+       .alert-item {
+           background: white;
+           border: 1px solid #dee2e6;
+           border-left: 5px solid #dc3545;
+           border-radius: 5px;
+           padding: 15px;
+           animation: slideIn 0.3s ease;
+       }
+       
+       .alert-item.blocked {
+           border-left-color: #ffc107;
+       }
+       
+       .alert-item.error {
+           border-left-color: #e74c3c;
+       }
+       
+       @keyframes slideIn {
+           from {
+               opacity: 0;
+               transform: translateX(-20px);
+           }
+           to {
+               opacity: 1;
+               transform: translateX(0);
+           }
+       }
+       
+       .alert-time {
+           font-size: 0.85em;
+           color: #999;
+       }
+       
+       .alert-ip {
+           font-size: 1.1em;
+           font-weight: 600;
+           color: #dc3545;
+           margin: 5px 0;
+       }
+       
+       .alert-message {
+           color: #333;
+           margin: 8px 0;
+       }
+       
+       .alert-action {
+           font-size: 0.9em;
+           margin-top: 8px;
+           padding: 8px;
+           border-radius: 3px;
+       }
+       
+       .alert-action.blocked {
+           background: #fff3cd;
+           color: #856404;
+           border: 1px solid #ffeaa7;
+       }
+       
+       .alert-action.failed {
+           background: #f8d7da;
+           color: #721c24;
+           border: 1px solid #f5c6cb;
+       }
+       
+       .ips-list {
+           display: flex;
+           flex-direction: column;
+           gap: 8px;
+       }
+       
+       .ip-item {
+           background: white;
+           padding: 10px;
+           border-radius: 5px;
+           border-left: 4px solid #dc3545;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+       }
+       
+       .ip-address {
+           font-family: 'Courier New', monospace;
+           font-weight: 600;
+           color: #dc3545;
+       }
+       
+       .attempts-list {
+           display: flex;
+           flex-direction: column;
+           gap: 8px;
+           max-height: 300px;
+           overflow-y: auto;
+       }
+       
+       .attempt-item {
+           background: white;
+           padding: 10px;
+           border-radius: 5px;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+       }
+       
+       .attempt-ip {
+           font-family: 'Courier New', monospace;
+           font-weight: 600;
+       }
+       
+       .attempt-count {
+           background: #667eea;
+           color: white;
+           padding: 5px 10px;
+           border-radius: 20px;
+           font-weight: 600;
+       }
+       
+       .empty-message {
+           text-align: center;
+           color: #999;
+           padding: 20px;
+           font-style: italic;
+       }
+       
+       @media (max-width: 768px) {
+           .content {
+               grid-template-columns: 1fr;
+           }
+           
+           .alerts-panel {
+               grid-column: 1;
+           }
+       }
+   </style>
+</head>
+<body>
+   <div class="container">
+       <div class="header">
+           <h1>🛡️ DetAttaq</h1>
+           <p>Détecteur de Bruteforce SSH en Temps Réel</p>
+       </div>
+       
+       <div class="content">
+           <div>
+               <div class="panel">
+                   <h2>📊 Statut</h2>
+                   <div class="status">
+                       <div class="status-item" id="monitoring-status">
+                           <span class="status-label">Monitoring</span>
+                           <span class="status-value inactive">Arrêté</span>
+                       </div>
+                       <div class="status-item">
+                           <span class="status-label">Seuil</span>
+                           <span class="status-value">{{ status.threshold }} tentatives</span>
+                       </div>
+                       <div class="status-item">
+                           <span class="status-label">Fenêtre</span>
+                           <span class="status-value">{{ status.window_seconds }}s</span>
+                       </div>
+                   </div>
+                   <div class="controls">
+                       <form action="{{ url_for('start_monitoring') }}" method="post" style="flex: 1;">
+                           <button type="submit" class="btn-start">▶️ Démarrer</button>
+                       </form>
+                       <form action="{{ url_for('stop_monitoring') }}" method="post" style="flex: 1;">
+                           <button type="submit" class="btn-stop">⏹️ Arrêter</button>
+                       </form>
+                   </div>
+               </div>
+               
+               <div class="panel" style="margin-top: 20px;">
+                   <h2>🚫 IPs Bloquées</h2>
+                   <div id="blocked-ips-container">
+                       <div class="ips-list" id="blocked-ips">
+                           <div class="empty-message">Aucune IP bloquée</div>
+                       </div>
+                   </div>
+               </div>
+               
+               <div class="panel" style="margin-top: 20px;">
+                   <h2>⚠️ Tentatives Actuelles</h2>
+                   <div id="attempts-container">
+                       <div class="attempts-list" id="attempts">
+                           <div class="empty-message">Aucune tentative détectée</div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+           
+           <div class="alerts-panel">
+               <div class="panel">
+                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                       <h2 style="margin: 0; border: none; padding: 0;">🚨 Alertes en Temps Réel</h2>
+                       <button class="btn-clear" onclick="clearAlerts()">Effacer</button>
+                   </div>
+                   <div id="alerts-container" class="alerts-container">
+                       <div class="empty-message">En attente d'alertes...</div>
+                   </div>
+               </div>
+           </div>
+
+           <div class="panel" style="margin-top: 20px;">
+                <h2>📝 Actions en arrière‑plan</h2>
+                <div id="logs-container" class="alerts-container">
+                    <div class="empty-message">Aucune action pour le moment...</div>
+                </div>
+            </div>
+
+       </div>
+   </div>
+   
+   {% with messages = get_flashed_messages() %}
+   {% if messages %}
+       <div style="max-width: 1200px; margin: 20px auto;">
+       {% for message in messages %}
+           <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; border: 1px solid #c3e6cb;">
+               {{ message }}
+           </div>
+       {% endfor %}
+       </div>
+   {% endif %}
+   {% endwith %}
+   
+   <script>
+
+        async function updateLogs() {
+            try {
+                const response = await fetch('/api/logs?limit=50');
+                const data = await response.json();
+
+                const logsDiv = document.getElementById('logs-container');
+                if (data.logs.length === 0) {
+                    logsDiv.innerHTML = '<div class="empty-message">Aucune action pour le moment...</div>';
+                } else {
+                        logsDiv.innerHTML = data.logs.map(log => `
+                            <div class="alert-item ${log.level === 'ERROR' ? 'error' : log.level === 'WARNING' ? 'blocked' : ''}">
+                                <div class="alert-time">⏰ ${log.timestamp}</div>
+                                <div class="alert-message">${log.message}</div>
+                            </div>
+                        `).join('');
+                    }
+            } catch (error) {
+                    console.error('Erreur lors de la mise à jour des logs:', error);
+                }
+        }
+
+   // Mise à jour initiale
+   updateLogs();
+
+   // Mise à jour toutes les secondes
+   setInterval(updateLogs, 1000);
+
+
+       // Mettre à jour le statut toutes les secondes
+       async function updateStatus() {
+           try {
+               const response = await fetch('/api/status');
+               const data = await response.json();
+               
+               // Mettre à jour le statut de monitoring
+               const monitoringStatus = document.getElementById('monitoring-status');
+               const statusValue = monitoringStatus.querySelector('.status-value');
+               if (data.monitoring_active) {
+                   statusValue.textContent = 'Actif';
+                   statusValue.classList.remove('inactive');
+                   statusValue.classList.add('active');
+                   monitoringStatus.classList.remove('inactive');
+                   monitoringStatus.classList.add('active');
+               } else {
+                   statusValue.textContent = 'Arrêté';
+                   statusValue.classList.remove('active');
+                   statusValue.classList.add('inactive');
+                   monitoringStatus.classList.remove('active');
+                   monitoringStatus.classList.add('inactive');
+               }
+               
+               // Mettre à jour les IPs bloquées
+               const blockedIpsDiv = document.getElementById('blocked-ips');
+               if (data.blocked_ips.length === 0) {
+                   blockedIpsDiv.innerHTML = '<div class="empty-message">Aucune IP bloquée</div>';
+               } else {
+                   blockedIpsDiv.innerHTML = data.blocked_ips.map(ip => 
+                       `<div class="ip-item"><span class="ip-address">${ip}</span><span>🔒 Bloquée</span></div>`
+                   ).join('');
+               }
+               
+               // Mettre à jour les tentatives
+               const attemptsDiv = document.getElementById('attempts');
+               const failedAttempts = Object.entries(data.failed_attempts);
+               if (failedAttempts.length === 0) {
+                   attemptsDiv.innerHTML = '<div class="empty-message">Aucune tentative détectée</div>';
+               } else {
+                   attemptsDiv.innerHTML = failedAttempts.map(([ip, count]) => 
+                       `<div class="attempt-item"><span class="attempt-ip">${ip}</span><span class="attempt-count">${count}</span></div>`
+                   ).join('');
+               }
+           } catch (error) {
+               console.error('Erreur lors de la mise à jour du statut:', error);
+           }
+       }
+       
+       // Mettre à jour les alertes toutes les secondes
+       async function updateAlerts() {
+           try {
+               const response = await fetch('/api/alerts?limit=50');
+               const data = await response.json();
+               
+               const alertsDiv = document.getElementById('alerts-container');
+               if (data.alerts.length === 0) {
+                   alertsDiv.innerHTML = '<div class="empty-message">En attente d\'alertes...</div>';
+               } else {
+                   alertsDiv.innerHTML = data.alerts.map(alert => `
+                       <div class="alert-item ${alert.blocked ? 'blocked' : alert.action === 'failed' ? 'error' : ''}">
+                           <div class="alert-time">⏰ ${alert.timestamp}</div>
+                           <div class="alert-ip">🎯 IP: ${alert.ip}</div>
+                           <div class="alert-message">${alert.message}</div>
+                           <div class="alert-message">Tentatives: <strong>${alert.count}</strong> en ${60}s</div>
+                           ${alert.action ? `<div class="alert-action ${alert.action}">
+                               ${alert.action === 'blocked' ? '✅ IP bloquée avec succès' : '❌ Impossible de bloquer l\'IP'}
+                           </div>` : ''}
+                       </div>
+                   `).join('');
+               }
+           } catch (error) {
+               console.error('Erreur lors de la mise à jour des alertes:', error);
+           }
+       }
+       
+       // Effacer les alertes
+       async function clearAlerts() {
+           try {
+               await fetch('/api/clear_alerts', { method: 'POST' });
+               document.getElementById('alerts-container').innerHTML = '<div class="empty-message">Alertes effacées</div>';
+           } catch (error) {
+               console.error('Erreur lors de l\'effacement des alertes:', error);
+           }
+       }
+       
+       // Mettre à jour initialement
+       updateStatus();
+       updateAlerts();
+       
+       // Mettre à jour toutes les secondes
+       setInterval(updateStatus, 1000);
+       setInterval(updateAlerts, 1000);
+   </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+﻿# Dépendances nécessaires pour DetAttaq.py
+
+Flask==2.3.3
+requests==2.31.0
+
+# Notes :
+# - Flask est utilisé pour l'interface web (tableau de bord en temps réel)
+# - requests est utilisé pour les tests d'intégration éventuels
+#
+# Cette outil utilise des modules de la bibliothèque standard Python.
