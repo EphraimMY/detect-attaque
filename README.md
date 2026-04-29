@@ -27,7 +27,7 @@ compte les tentatives dans une fenêtre temporelle et déclenche des alertes ou 
 - Sur Windows : accès à un fichier de log de test ou au journal Windows Event Log
 
 ### Installation
-1. Cloner ou copier le fichier compresser du projet `https://github.com/EphraimMY/detect-attaque`
+1. Cloner ou copier le fichier compresser du projet https://github.com/EphraimMY/detect-attaque
 2. Décompresser le fichier .zip
 3. Placer le dossier dans le répertoire `C:\Windows\System32`
 4. Activer un environnement virtuel Python (optionnel mais recommandé)
