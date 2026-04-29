@@ -101,3 +101,10 @@ Ce fichier contient les dépendances Python requises pour exécuter l'interface 
 
 ## Auteur
 MBOUMBA YANDREPOT Ephraïm
+
+## Licence
+Ce projet est fourni exclusivement à des fins éducatives et pédagogiques.
+Il ne doit en aucun cas être utilisé pour mener des attaques, contourner des systèmes de sécurité ou nuire à des infrastructures informatiques.
+
+L’auteur décline toute responsabilité en cas d’usage inapproprié, illégal ou malveillant du code.
+En utilisant ce projet, vous acceptez de respecter les lois en vigueur dans votre pays et les bonnes pratiques en matière de cybersécurité.
