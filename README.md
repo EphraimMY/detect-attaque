@@ -98,3 +98,6 @@ Le répertoire `api/logs` est créé automatiquement si nécessaire.
 ## Fichier `requirements.txt`
 
 Ce fichier contient les dépendances Python requises pour exécuter l'interface web et le projet.
+
+## Auteur
+MBOUMBA YANDREPOT Ephraïm
