@@ -1,6 +1,10 @@
 ﻿#!/usr/bin/env python3
 
 """
+- Author: MBOUMBA YANDREPOT Ephraïm
+- Version: 2.0
+- Description:
+
 DetAttaq.py — Détecteur de bruteforce SSH basé sur les logs.
 Principales fonctionnalitées :
  - Exécution continue jusqu'à interruption explicite (Ctrl+C ou fichier stop)
