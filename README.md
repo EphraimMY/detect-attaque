@@ -1,4 +1,4 @@
-﻿# DetAttaq
+﻿![DetAttaq](https://img.shields.io/badge/DetAttaq-SSH%20Bruteforce%20Detector-darkred?style=for-the-badge&logoColor=white)
 
 ## Description
 
